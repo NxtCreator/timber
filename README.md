@@ -1,1 +1,1 @@
-# timber
+A terminal log viewer
