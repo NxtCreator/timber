@@ -81,6 +81,7 @@ else:
 
                 print(f"[+] {log}")
                 gen_logs += 1
+                time.sleep(0.5)
 
         except KeyboardInterrupt:
             print("Stopped")

@@ -31,9 +31,33 @@ class Timber(App):
         rich_log = self.query_one(RichLog)
 
         with open('app.log', 'r') as file:
-            for log in file:
+            while True:
+                log = file.readline()
+                
+                if log == "":
+                    break
+
                 parsed_log = style_log_line(log)
                 rich_log.write(parsed_log)
+
+            self.position = file.tell()
+        self.set_interval(1, self.check_new_logs)
+
+    def check_new_logs(self):
+        rich_log = self.query_one(RichLog)
+        with open("app.log", "r") as file:
+            file.seek(self.position)
+            while True:
+                log = file.readline()
+
+                if log == "":
+                    break
+
+                parsed_log = style_log_line(log)
+                rich_log.write(parsed_log)
+
+            self.position = file.tell()
+            
 
 
 if __name__ == "__main__":
