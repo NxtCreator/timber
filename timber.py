@@ -13,7 +13,7 @@ level_colors = {
 def style_log_line(log):
     log_parts = log.split("|")
     if len(log_parts) < 3:
-        return Text(log.rstrip(), style="white")
+        return Text(log.rstrip())
     
     level = log_parts[1].strip()
     return Text(log.rstrip(), style=level_colors.get(level))
@@ -30,7 +30,7 @@ class Timber(App):
     def compose(self) -> ComposeResult:
         yield Header()
         yield RichLog()
-        yield Static("[green]● RUNNING[/green]", id="status")
+        yield Static(self.get_status_text(), id="status")
         yield Footer()
 
     def on_mount(self):
@@ -39,12 +39,12 @@ class Timber(App):
 
 
     def read_new_lines(self):
-        rich_log = self.query_one(RichLog)
-        at_bottom = rich_log.scroll_y == rich_log.max_scroll_y
-
         if self.paused:
             return
-        
+
+        rich_log = self.query_one(RichLog)
+        at_bottom = rich_log.scroll_y >= rich_log.max_scroll_y - 1
+
         with open("app.log", "r") as file:
             file.seek(self.position)
             while True:
@@ -65,11 +65,10 @@ class Timber(App):
 
     def update_status(self):
         status = self.query_one("#status", Static)
+        status.update(self.get_status_text())
 
-        if self.paused:
-            status.update("[yellow]● PAUSED[/yellow]")
-        else:
-            status.update("[green]● RUNNING[/green]")
+    def get_status_text(self):
+        return "[yellow]● PAUSED[/yellow]" if self.paused else "[green]● RUNNING[/green]"
             
 
 
