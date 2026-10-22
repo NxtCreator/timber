@@ -16,11 +16,15 @@ def style_log_line(log):
         return Text(log.rstrip(), style="white")
     
     level = log_parts[1].strip()
-    return Text(log.rstrip(), style=level_colors.get(level, "white"))
+    return Text(log.rstrip(), style=level_colors.get(level))
 
 class Timber(App):
 
     BINDINGS = [("q", "quit", "Exit the App")]
+
+    def __init__(self):
+        super().__init__()
+        self.position = 0
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -28,22 +32,13 @@ class Timber(App):
         yield Footer()
 
     def on_mount(self):
-        rich_log = self.query_one(RichLog)
-
-        with open('app.log', 'r') as file:
-            while True:
-                log = file.readline()
-                
-                if log == "":
-                    break
-
-                parsed_log = style_log_line(log)
-                rich_log.write(parsed_log)
-
-            self.position = file.tell()
-        self.set_interval(1, self.check_new_logs)
+        self.read_new_lines()
+        self.set_interval(0.2, self.check_new_logs)
 
     def check_new_logs(self):
+        self.read_new_lines()
+
+    def read_new_lines(self):
         rich_log = self.query_one(RichLog)
         with open("app.log", "r") as file:
             file.seek(self.position)
