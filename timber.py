@@ -1,5 +1,5 @@
 from textual.app import App, ComposeResult
-from textual.widgets import Header, Footer, RichLog
+from textual.widgets import Header, Footer, RichLog, Static
 from rich.text import Text
 
 level_colors = {
@@ -20,15 +20,17 @@ def style_log_line(log):
 
 class Timber(App):
 
-    BINDINGS = [("q", "quit", "Exit the App")]
+    BINDINGS = [("q", "quit", "Exit the App"), ("p", "toggle_pause", "Pause/Resume")]
 
     def __init__(self):
         super().__init__()
         self.position = 0
+        self.paused = False
 
     def compose(self) -> ComposeResult:
         yield Header()
         yield RichLog()
+        yield Static("[green]● RUNNING[/green]", id="status")
         yield Footer()
 
     def on_mount(self):
@@ -38,6 +40,11 @@ class Timber(App):
 
     def read_new_lines(self):
         rich_log = self.query_one(RichLog)
+        at_bottom = rich_log.scroll_y == rich_log.max_scroll_y
+
+        if self.paused:
+            return
+        
         with open("app.log", "r") as file:
             file.seek(self.position)
             while True:
@@ -47,9 +54,22 @@ class Timber(App):
                     break
 
                 parsed_log = style_log_line(log)
-                rich_log.write(parsed_log)
+                rich_log.write(parsed_log, scroll_end=at_bottom)
 
             self.position = file.tell()
+
+    def action_toggle_pause(self):
+        self.paused = not self.paused
+        self.update_status()
+
+
+    def update_status(self):
+        status = self.query_one("#status", Static)
+
+        if self.paused:
+            status.update("[yellow]● PAUSED[/yellow]")
+        else:
+            status.update("[green]● RUNNING[/green]")
             
 
 
