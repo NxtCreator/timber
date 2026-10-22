@@ -33,10 +33,8 @@ class Timber(App):
 
     def on_mount(self):
         self.read_new_lines()
-        self.set_interval(0.2, self.check_new_logs)
+        self.set_interval(0.2, self.read_new_lines)
 
-    def check_new_logs(self):
-        self.read_new_lines()
 
     def read_new_lines(self):
         rich_log = self.query_one(RichLog)
