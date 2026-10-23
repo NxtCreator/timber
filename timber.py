@@ -18,12 +18,27 @@ def style_log_line(log):
     level = log_parts[1].strip()
     return Text(log.rstrip(), style=level_colors.get(level))
 
+
+def get_level(log):
+    log_line_parts = log.split("|")
+
+    if len(log_line_parts) >= 3:
+        log_level = log_line_parts[1].strip()
+        if log_level in level_colors:
+            return log_level
+    return None
+
 class Timber(App):
 
     BINDINGS = [("q", "quit", "Exit the App"), 
                 ("p", "toggle_pause", "Pause/Resume"),
                 ("/", "focus_filter", "Focus the Filter"),
-                ("escape", "focus_log_viewer", "Focus Log Viewer")]
+                ("escape", "focus_log_viewer", "Focus Log Viewer"),
+                ("1", "toggle_level('INFO')", "Toggle INFO"),
+                ("2", "toggle_level('WARN')", "Toggle WARN"),
+                ("3", "toggle_level('ERROR')", "Toggle ERROR"),
+                ("4", "toggle_level('DEBUG')", "Toggle DEBUG"),
+                ("5", "toggle_level('CRITICAL')", "Toggle CRITICAL"),]
 
     def __init__(self):
         super().__init__()
@@ -31,6 +46,7 @@ class Timber(App):
         self.paused = False
         self.all_lines = []
         self.filter_text = ""
+        self.enabled_levels = set(level_colors)
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -81,17 +97,16 @@ class Timber(App):
 
     
     def on_input_changed(self, event: Input.Changed):
-        rich_log = self.query_one(RichLog)
-        rich_log.clear()
         self.filter_text = event.value
+        self.refresh_logs()
 
-        for log in self.all_lines:
-            if self.matches_filter(log):
-                styled_log = style_log_line(log)
-                rich_log.write(styled_log)
 
     def matches_filter(self, log):
-        return self.filter_text.lower() in log.lower()
+        level = get_level(log)
+        matches_search = self.filter_text.lower() in log.lower()
+        level_enabled = level in self.enabled_levels
+        is_unknown = level is None
+        return matches_search and (level_enabled or is_unknown)
 
     def action_focus_filter(self):
         filter_input = self.query_one(Input)
@@ -100,6 +115,22 @@ class Timber(App):
     def action_focus_log_viewer(self):
         log_viewer = self.query_one(RichLog)
         self.set_focus(log_viewer)
+
+    def action_toggle_level(self, level: str):
+        if level in self.enabled_levels:
+            self.enabled_levels.discard(level)
+        else: 
+            self.enabled_levels.add(level)
+        self.refresh_logs()
+
+    def refresh_logs(self):
+        rich_log = self.query_one(RichLog)
+        rich_log.clear()
+
+        for log in self.all_lines:
+            if self.matches_filter(log):
+                styled_log = style_log_line(log)
+                rich_log.write(styled_log)
         
 
 
