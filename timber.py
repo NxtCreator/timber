@@ -20,7 +20,10 @@ def style_log_line(log):
 
 class Timber(App):
 
-    BINDINGS = [("q", "quit", "Exit the App"), ("p", "toggle_pause", "Pause/Resume")]
+    BINDINGS = [("q", "quit", "Exit the App"), 
+                ("p", "toggle_pause", "Pause/Resume"),
+                ("/", "focus_filter", "Focus the Filter"),
+                ("escape", "focus_log_viewer", "Focus Log Viewer")]
 
     def __init__(self):
         super().__init__()
@@ -37,6 +40,7 @@ class Timber(App):
         yield Footer()
 
     def on_mount(self):
+        self.query_one(RichLog).focus()
         self.read_new_lines()
         self.set_interval(0.2, self.read_new_lines)
 
@@ -88,6 +92,14 @@ class Timber(App):
 
     def matches_filter(self, log):
         return self.filter_text.lower() in log.lower()
+
+    def action_focus_filter(self):
+        filter_input = self.query_one(Input)
+        self.set_focus(filter_input)
+
+    def action_focus_log_viewer(self):
+        log_viewer = self.query_one(RichLog)
+        self.set_focus(log_viewer)
         
 
 
