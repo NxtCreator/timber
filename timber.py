@@ -1,5 +1,5 @@
 from textual.app import App, ComposeResult
-from textual.widgets import Header, Footer, RichLog, Static
+from textual.widgets import Header, Footer, RichLog, Static, Input
 from rich.text import Text
 
 level_colors = {
@@ -26,9 +26,11 @@ class Timber(App):
         super().__init__()
         self.position = 0
         self.paused = False
+        self.all_lines = []
 
     def compose(self) -> ComposeResult:
         yield Header()
+        yield Input(placeholder="Filter logs...")
         yield RichLog()
         yield Static(self.get_status_text(), id="status")
         yield Footer()
@@ -55,6 +57,7 @@ class Timber(App):
 
                 parsed_log = style_log_line(log)
                 rich_log.write(parsed_log, scroll_end=at_bottom)
+                self.all_lines.append(log)
 
             self.position = file.tell()
 
@@ -69,8 +72,16 @@ class Timber(App):
 
     def get_status_text(self):
         return "[yellow]● PAUSED[/yellow]" if self.paused else "[green]● RUNNING[/green]"
-            
 
+    
+    def on_input_changed(self, event: Input.Changed):
+        rich_log = self.query_one(RichLog)
+        rich_log.clear()
+
+        for log in self.all_lines:
+            if event.value.lower() in log.lower():
+                styled_log = style_log_line(log)
+                rich_log.write(styled_log)
 
 if __name__ == "__main__":
     app = Timber()
