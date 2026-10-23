@@ -27,6 +27,7 @@ class Timber(App):
         self.position = 0
         self.paused = False
         self.all_lines = []
+        self.filter_text = ""
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -55,9 +56,10 @@ class Timber(App):
                 if log == "":
                     break
 
-                parsed_log = style_log_line(log)
-                rich_log.write(parsed_log, scroll_end=at_bottom)
-                self.all_lines.append(log)
+                if self.matches_filter(log):
+                    parsed_log = style_log_line(log)
+                    rich_log.write(parsed_log, scroll_end=at_bottom)
+                self.all_lines.append(log.rstrip())
 
             self.position = file.tell()
 
@@ -77,11 +79,17 @@ class Timber(App):
     def on_input_changed(self, event: Input.Changed):
         rich_log = self.query_one(RichLog)
         rich_log.clear()
+        self.filter_text = event.value
 
         for log in self.all_lines:
-            if event.value.lower() in log.lower():
+            if self.matches_filter(log):
                 styled_log = style_log_line(log)
                 rich_log.write(styled_log)
+
+    def matches_filter(self, log):
+        return self.filter_text.lower() in log.lower()
+        
+
 
 if __name__ == "__main__":
     app = Timber()
