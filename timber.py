@@ -10,11 +10,11 @@ parser = argparse.ArgumentParser(description="Timber - A terminal log viewer")
 parser.add_argument("file_path", nargs="?")
 args = parser.parse_args()
 
-file_path = Path(args.file_path)
+
 
 if args.file_path is None:
     args.file_path = input("Path to log file: ").strip().strip('"')
-
+    
 file_path = Path(args.file_path)
 
 if not file_path.is_file():
