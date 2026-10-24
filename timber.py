@@ -7,13 +7,19 @@ from textual.binding import Binding
 from rich.text import Text
 
 parser = argparse.ArgumentParser(description="Timber - A terminal log viewer")
-parser.add_argument('file_path')
+parser.add_argument("file_path", nargs="?")
 args = parser.parse_args()
 
 file_path = Path(args.file_path)
 
+if args.file_path is None:
+    args.file_path = input("Path to log file: ").strip().strip('"')
+
+file_path = Path(args.file_path)
+
 if not file_path.is_file():
-    print(f"Error: The path {file_path} does not exist. Please check the path and try again")
+    print(f"Error: '{file_path}' is not a valid file.")
+    input("Press Enter to exit...")
     sys.exit(1)
 
 level_colors = {
@@ -81,7 +87,7 @@ class Timber(App):
         rich_log = self.query_one(RichLog)
         at_bottom = rich_log.scroll_y >= rich_log.max_scroll_y - 1
 
-        with open(self.filename, "r") as file:
+        with open(self.filename, "r", encoding="utf-8", errors="replace") as file:
             file.seek(self.position)
             while True:
                 log = file.readline()
