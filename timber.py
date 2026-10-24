@@ -1,5 +1,6 @@
 from textual.app import App, ComposeResult
 from textual.widgets import Header, Footer, RichLog, Static, Input
+from textual.binding import Binding
 from rich.text import Text
 
 level_colors = {
@@ -11,12 +12,10 @@ level_colors = {
 }
 
 def style_log_line(log):
-    log_parts = log.split("|")
-    if len(log_parts) < 3:
+    level = get_level(log)
+    if level is None:
         return Text(log.rstrip())
-    
-    level = log_parts[1].strip()
-    return Text(log.rstrip(), style=level_colors.get(level))
+    return Text(log.rstrip(), style=level_colors[level])
 
 
 def get_level(log):
@@ -34,11 +33,11 @@ class Timber(App):
                 ("p", "toggle_pause", "Pause/Resume"),
                 ("/", "focus_filter", "Focus the Filter"),
                 ("escape", "focus_log_viewer", "Focus Log Viewer"),
-                ("1", "toggle_level('INFO')", "Toggle INFO"),
-                ("2", "toggle_level('WARN')", "Toggle WARN"),
-                ("3", "toggle_level('ERROR')", "Toggle ERROR"),
-                ("4", "toggle_level('DEBUG')", "Toggle DEBUG"),
-                ("5", "toggle_level('CRITICAL')", "Toggle CRITICAL"),]
+                Binding("1", "toggle_level('INFO')", "Toggle INFO", show=False),
+                Binding("2", "toggle_level('WARN')", "Toggle WARN", show=False),
+                Binding("3", "toggle_level('ERROR')", "Toggle ERROR", show=False),
+                Binding("4", "toggle_level('DEBUG')", "Toggle DEBUG", show=False),
+                Binding("5", "toggle_level('CRITICAL')", "Toggle CRITICAL", show=False),]
 
     def __init__(self):
         super().__init__()
@@ -93,7 +92,18 @@ class Timber(App):
         status.update(self.get_status_text())
 
     def get_status_text(self):
-        return "[yellow]● PAUSED[/yellow]" if self.paused else "[green]● RUNNING[/green]"
+        level_labels = []
+
+        for level in level_colors:
+            if level in self.enabled_levels:
+                level_labels.append(level)
+            else:
+                level_labels.append(f"[dim]{level}[/dim]")
+
+        levels_text = " | ".join(level_labels)
+        status = "[yellow]● PAUSED[/yellow]" if self.paused else "[green]● RUNNING[/green]"
+
+        return f"{status} | {levels_text}"
 
     
     def on_input_changed(self, event: Input.Changed):
@@ -122,6 +132,7 @@ class Timber(App):
         else: 
             self.enabled_levels.add(level)
         self.refresh_logs()
+        self.update_status()
 
     def refresh_logs(self):
         rich_log = self.query_one(RichLog)
