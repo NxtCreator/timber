@@ -1,7 +1,20 @@
+import argparse
+import sys
+from pathlib import Path
 from textual.app import App, ComposeResult
 from textual.widgets import Header, Footer, RichLog, Static, Input
 from textual.binding import Binding
 from rich.text import Text
+
+parser = argparse.ArgumentParser(description="Timber - A terminal log viewer")
+parser.add_argument('file_path')
+args = parser.parse_args()
+
+file_path = Path(args.file_path)
+
+if not file_path.is_file():
+    print(f"Error: The path {file_path} does not exist. Please check the path and try again")
+    sys.exit(1)
 
 level_colors = {
     "INFO": "green",
@@ -39,8 +52,9 @@ class Timber(App):
                 Binding("4", "toggle_level('DEBUG')", "Toggle DEBUG", show=False),
                 Binding("5", "toggle_level('CRITICAL')", "Toggle CRITICAL", show=False),]
 
-    def __init__(self):
+    def __init__(self, filename):
         super().__init__()
+        self.filename = filename
         self.position = 0
         self.paused = False
         self.all_lines = []
@@ -67,7 +81,7 @@ class Timber(App):
         rich_log = self.query_one(RichLog)
         at_bottom = rich_log.scroll_y >= rich_log.max_scroll_y - 1
 
-        with open("app.log", "r") as file:
+        with open(self.filename, "r") as file:
             file.seek(self.position)
             while True:
                 log = file.readline()
@@ -146,5 +160,5 @@ class Timber(App):
 
 
 if __name__ == "__main__":
-    app = Timber()
+    app = Timber(args.file_path)
     app.run()
