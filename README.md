@@ -71,6 +71,15 @@ python -m pip install -r requirements.txt
 
 That's it! You're ready to run Timber.
 
+## 📦 Download
+
+**Windows:** grab `timber.exe` and `sample.log` from the [latest release](https://github.com/NxtCreator/timber/releases/latest), put them in the same folder, and double-click `timber.exe`. Paste the path to `sample.log` when it asks. (Windows may warn about an unsigned app. That's expected.)
+
+**macOS / Linux:** follow the installation steps below and run Timber from source.
+
+**Just want to look around?** Run `python timber.py sample.log` to try Timber on the included sample log, with no generator needed.
+
+
 ## 🚀 Usage
 
 Pass the path to a log file when starting Timber:
@@ -108,6 +117,7 @@ Then, in a second terminal, run:
 ```bash
 python timber.py app.log
 ```
+Prefer something quicker? `sample.log` in this repo is a ready-made log file you can open right away.
 
 Now you can watch the logs roll in and try out the filters yourself.
 
